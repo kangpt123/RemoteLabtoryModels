@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Question, Publication, Article
+from .models import Question, Publication, Article, TimeSlot
 # Register your models here.
 
 
@@ -10,3 +10,4 @@ class ArticleAdmin(admin.ModelAdmin):
 admin.site.register(Question)
 admin.site.register(Publication)
 admin.site.register(Article, ArticleAdmin)
+admin.site.register(TimeSlot)

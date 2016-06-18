@@ -45,3 +45,15 @@ class Article(models.Model):
 
     class Meta:
         ordering = ('headline',)
+
+
+class TimeSlot(models.Model):
+    startTime = models.TimeField()
+    endTime = models.TimeField()
+# need to add verification that promise endTime is larger than startTime
+    def __str__(self):
+        return 'from ' + str(self.startTime) + ' to ' + str(self.endTime)
+
+
+class Instrument(models.Model):
+    id = models.CharField()
