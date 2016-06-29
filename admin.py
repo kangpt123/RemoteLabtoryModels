@@ -13,7 +13,7 @@ class LabDeskAdmin(admin.ModelAdmin):
 
 
 class LabAdmin(admin.ModelAdmin):
-    list_display = ('labName', 'labCategory', 'startDate', 'endDate')
+    list_display = ('pk', 'labName', 'labCategory', 'startDate', 'endDate')
 
 
 class InstrumentAdmin(admin.ModelAdmin):
@@ -25,7 +25,8 @@ class StudentAdmin(admin.ModelAdmin):
 
 
 class OrderRecordsAdmin(admin.ModelAdmin):
-    list_display = ('deskID', 'date', 'timeSlot', 'student', 'orderTime', 'lab')
+    list_display = (
+        'deskID', 'date', 'timeSlot', 'student', 'orderTime', 'lab')
 
 
 class LabScheamAdmin(admin.ModelAdmin):

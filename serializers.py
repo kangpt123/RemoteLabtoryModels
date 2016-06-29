@@ -42,6 +42,8 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
 class OrderRecordsSerializer(serializers.ModelSerializer):
 
+    # timeSlot = TimeSlotSerializer()
+
     class Meta:
         model = OrderRecords
-        fields = ('deskID', 'timeSlot', 'date', 'student', 'orderTime')
+        fields = ('deskID', 'timeSlot', 'date', 'student', 'orderTime', 'lab')

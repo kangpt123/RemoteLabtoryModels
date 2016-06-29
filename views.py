@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, Http404
 # Create your views here.
 import json
+from itertools import chain
 from datetime import datetime, date, timedelta
 import random
 
@@ -102,14 +103,17 @@ class LabDeskDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class queryOrderableLabList(generics.ListAPIView):
+    # raise exception 处需要打一个logger
 
+    """
+    """
     serializer_class = LabSerializer
 
     def get_queryset(self):
         try:
             paras = Parameter.objects.get(pk=1)
             student = Student.objects.get(studentID=self.kwargs['studentID'])
-        except Parameter.DoesNotExist, Student.DoesNotExist:
+        except (Parameter.DoesNotExist, Student.DoesNotExist):
             raise Http404("Parameter.DoesNotExist or Student.DoesNotExist")
         today = date.today()
         deltaDay = timedelta(days=paras.preDay)
@@ -119,25 +123,33 @@ class queryOrderableLabList(generics.ListAPIView):
 
 
 class hasOrderLab(generics.ListAPIView):
-    pass
+    # 没有限制它的GET, POST方法
+    serializer_class = OrderRecordsSerializer
+
+    def get_queryset(self):
+        now = datetime.now()
+        userRecords = OrderRecords.objects.filter(
+            student__studentID=self.kwargs['studentID'], lab__pk=self.kwargs['labID'])
+        todayRecords = userRecords.filter(date__gte=now.date())
+        nextDayRecords = userRecords.filter(
+            date=now.date(), timeSlot__startTime__gte=now.time())
+        return list(chain(todayRecords, nextDayRecords))
 
 
 @api_view()
-def labResourceList(request, studentID, labID):
+def labResourceList(request, labID):
     """
-    根据orderRecords表中的对应实验桌和时间段的占用情况返回可用资源列表
-
+    根据orderRecords表中的对应实验桌和时间段的占用情况返回可用资源列表。
     """
     try:
         paras = Parameter.objects.get(pk=1)
         lab = Lab.objects.get(pk=labID)
-    except Parameter.DoesNotExist, Lab.DoesNotExist:
+    except (Parameter.DoesNotExist, Lab.DoesNotExist):
         raise Http404("Parameter or LabID DoesNotExist")
     deltaDay = timedelta(days=paras.preDay)
     today = date.today()
     if not lab.startDate or lab.startDate > today + deltaDay or lab.endDate < today + deltaDay:
-        return Response({'message': 'lab error'},
-                        status=status.HTTP_404_NOT_FOUND)
+        return Response([], status=status.HTTP_200_OK)
     labTypeID = lab.labCategory.pk
     totalNum = len(LabDesk.objects.filter(labCategory__pk=labTypeID))
     rs = []
@@ -148,8 +160,6 @@ def labResourceList(request, studentID, labID):
                        "totalNum": totalNum, "occupyNum": "", "isU": False}
             occResources = OrderRecords.objects.filter(
                 date=today, timeSlot=duration)
-            if occResources.filter(student__studentID=studentID):
-                content["isU"] = True
             content["time"] = TimeSlotSerializer(duration).data
             content["occupyNum"] = len(occResources)
             rs.append(content)
