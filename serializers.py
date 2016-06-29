@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from polls.models import Student, Lab, LabsScheam, LabDesk, TimeSlot, Records
+from polls.models import Student, Lab, LabsScheam, LabDesk, TimeSlot
+from polls.models import OrderRecords
 
 
 class LabSerializer(serializers.ModelSerializer):
@@ -20,11 +21,9 @@ class LabsScheamSerializer(serializers.ModelSerializer):
 
 class StudentSerializer(serializers.HyperlinkedModelSerializer):
 
-    finishLabs = LabSerializer(many=True)
-
     class Meta:
         model = Student
-        fields = ('url', 'studentID', 'name', 'labscheam', 'finishLabs')
+        fields = ('url', 'studentID', 'name', 'labscheam')
 
 
 class LabDeskSerializer(serializers.ModelSerializer):
@@ -41,8 +40,8 @@ class TimeSlotSerializer(serializers.ModelSerializer):
         fields = ('startTime', 'endTime')
 
 
-class RecordsSerializer(serializers.ModelSerializer):
+class OrderRecordsSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Records
+        model = OrderRecords
         fields = ('deskID', 'timeSlot', 'date', 'student', 'orderTime')

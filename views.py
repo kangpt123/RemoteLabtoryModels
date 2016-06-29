@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
 # Create your views here.
@@ -5,11 +6,11 @@ import json
 from datetime import datetime, date, timedelta
 import random
 
-from .models import Student, Lab, LabsScheam, LabDesk, TimeSlot, Records
+from .models import Student, Lab, LabsScheam, LabDesk, TimeSlot, OrderRecords
 from .models import Parameter
 from .serializers import StudentSerializer, LabSerializer, LabsScheamSerializer
 from .serializers import LabDeskSerializer, TimeSlotSerializer
-from .serializers import RecordsSerializer
+from .serializers import OrderRecordsSerializer
 
 from rest_framework import viewsets
 from rest_framework import filters
@@ -80,12 +81,12 @@ class TimeSlotViewSet(viewsets.ModelViewSet):
     serializer_class = TimeSlotSerializer
 
 
-class RecordsViewSet(viewsets.ModelViewSet):
+class OrderRecordsViewSet(viewsets.ModelViewSet):
 
     """
     """
-    queryset = Records.objects.all()
-    serializer_class = RecordsSerializer
+    queryset = OrderRecords.objects.all()
+    serializer_class = OrderRecordsSerializer
 
 
 class LabDeskList(generics.ListCreateAPIView):
@@ -100,7 +101,7 @@ class LabDeskDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LabDeskSerializer
 
 
-class StudentUnorderLabList(generics.ListAPIView):
+class queryOrderableLabList(generics.ListAPIView):
 
     serializer_class = LabSerializer
 
@@ -109,25 +110,29 @@ class StudentUnorderLabList(generics.ListAPIView):
             paras = Parameter.objects.get(pk=1)
             student = Student.objects.get(studentID=self.kwargs['studentID'])
         except Parameter.DoesNotExist, Student.DoesNotExist:
-            raise Http404
+            raise Http404("Parameter.DoesNotExist or Student.DoesNotExist")
         today = date.today()
         deltaDay = timedelta(days=paras.preDay)
         candidateLabs = student.labscheam.labs.filter(
             startDate__lte=(today + deltaDay), endDate__gte=(today + deltaDay))
-        finishLabs = student.finishLabs.all()
-        return [lab for lab in candidateLabs if lab not in finishLabs]
+        return candidateLabs
+
+
+class hasOrderLab(generics.ListAPIView):
+    pass
 
 
 @api_view()
-def LabResourcesList(request, studentID, labID):
+def labResourceList(request, studentID, labID):
     """
-    remain resources of a specific Lab
+    根据orderRecords表中的对应实验桌和时间段的占用情况返回可用资源列表
+
     """
     try:
         paras = Parameter.objects.get(pk=1)
         lab = Lab.objects.get(pk=labID)
     except Parameter.DoesNotExist, Lab.DoesNotExist:
-        raise Http404
+        raise Http404("Parameter or LabID DoesNotExist")
     deltaDay = timedelta(days=paras.preDay)
     today = date.today()
     if not lab.startDate or lab.startDate > today + deltaDay or lab.endDate < today + deltaDay:
@@ -141,7 +146,7 @@ def LabResourcesList(request, studentID, labID):
         for duration in TimeSlot.objects.all():
             content = {"date": today, "time": "",
                        "totalNum": totalNum, "occupyNum": "", "isU": False}
-            occResources = Records.objects.filter(
+            occResources = OrderRecords.objects.filter(
                 date=today, timeSlot=duration)
             if occResources.filter(student__studentID=studentID):
                 content["isU"] = True

@@ -9,7 +9,7 @@ router.register(r'lab', views.LabViewSet)
 router.register(r'labscheam', views.LabsScheamViewSet)
 # router.register(r'labdesk', views.LabDeskViewSet)
 router.register(r'timeslot', views.TimeSlotViewSet)
-router.register(r'records', views.RecordsViewSet)
+router.register(r'records', views.OrderRecordsViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^labinfos/$', views.labinfos, name='labinfos'),
@@ -19,9 +19,9 @@ urlpatterns += [url(r'^labdesk/$',
                     views.LabDeskList.as_view(), name='labdesk-list'),
                 url(r'^labdesk/(?P<pk>[0-9]+)/$',
                     views.LabDeskDetail.as_view(), name='labdesk-detail'),
-                url(r'^studentunorderlab/(?P<studentID>.+)/$',
-                    views.StudentUnorderLabList.as_view(),
+                url(r'^queryorderablelabList/(?P<studentID>.+)/$',
+                    views.queryOrderableLabList.as_view(),
                     name='studentunorderlab-list'),
-                url(r'^labresources/(?P<studentID>.+)/(?P<labID>[0-9]+)/$',
-                    views.LabResourcesList,
+                url(r'^labresourcelist/(?P<studentID>.+)/(?P<labID>[0-9]+)/$',
+                    views.labResourceList,
                     name='labresources-list'), ]

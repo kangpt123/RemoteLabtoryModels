@@ -24,6 +24,7 @@ class Instrument(models.Model):
     name = models.CharField(max_length=3, choices=INSTRUMENT_NAME)
     Position = models.ForeignKey(
         'LabDesk', on_delete=models.SET_NULL, blank=True, null=True)
+    URL = models.URLField(blank=True, null=True)
 # 添加一个所属实验桌的属性好不好，待斟酌
 
     def __str__(self):
@@ -63,12 +64,12 @@ class LabDesk(models.Model):
         return self.labCategory.categoryName + " Desk:" + str(self.deskID)
 
 
-class Records(models.Model):
-    deskID = models.ForeignKey(LabDesk, on_delete=models.CASCADE)
-    timeSlot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE)
+class OrderRecords(models.Model):
+    deskID = models.ForeignKey(LabDesk, on_delete=models.SET_NULL, null=True)
+    timeSlot = models.ForeignKey(TimeSlot, on_delete=models.SET_NULL, null=True)
+    lab = models.ForeignKey(Lab, on_delete=models.SET_NULL, null=True)
     date = models.DateField()
-    student = models.ForeignKey(
-        'Student', on_delete=models.SET_NULL, blank=True, null=True)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
     orderTime = models.DateTimeField(auto_now_add=True)
 
 
@@ -78,8 +79,6 @@ class Student(models.Model):
     token = models.CharField(max_length=100, blank=True, null=True)
     labscheam = models.ForeignKey(
         'LabsScheam', on_delete=models.CASCADE, blank=True, null=True)
-    finishLabs = models.ManyToManyField(Lab, blank=True)
-# 需要添加什么待完成实验或者待预定实验
 
     def __str__(self):
         return self.studentID + ' : ' + self.name
