@@ -66,11 +66,16 @@ class LabDesk(models.Model):
 
 class OrderRecords(models.Model):
     deskID = models.ForeignKey(LabDesk, on_delete=models.SET_NULL, null=True)
-    timeSlot = models.ForeignKey(TimeSlot, on_delete=models.SET_NULL, null=True)
+    timeSlot = models.ForeignKey(
+        TimeSlot, on_delete=models.SET_NULL, null=True)
     lab = models.ForeignKey(Lab, on_delete=models.SET_NULL, null=True)
     date = models.DateField()
     student = models.ForeignKey('Student', on_delete=models.CASCADE)
     orderTime = models.DateTimeField(auto_now_add=True)
+    updateTime = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.date) + " timeSlot: " + str(self.timeSlot.pk) + " deskID: " + str(self.deskID.pk) + ' pk: ' + str(self.pk)
 
 
 class Student(models.Model):
@@ -90,3 +95,11 @@ class LabsScheam(models.Model):
 
     def __str__(self):
         return self.scheamName
+
+
+class ActionRecords(models.Model):
+    STATUS = (
+        ('0', u'开始实验'), ('1', u'中途退出'), ('2', u'完成实验'), ('3', u'超时退出'))
+    OrderRecordID = models.ForeignKey(OrderRecords, on_delete=models.CASCADE)
+    actionTime = models.DateTimeField(auto_now=True)
+    action = models.CharField(max_length=1, choices=STATUS)

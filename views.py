@@ -6,12 +6,13 @@ import json
 from itertools import chain
 from datetime import datetime, date, timedelta
 import random
+import django_filters
 
 from .models import Student, Lab, LabsScheam, LabDesk, TimeSlot, OrderRecords
-from .models import Parameter
+from .models import Parameter, ActionRecords
 from .serializers import StudentSerializer, LabSerializer, LabsScheamSerializer
 from .serializers import LabDeskSerializer, TimeSlotSerializer
-from .serializers import OrderRecordsSerializer
+from .serializers import OrderRecordsSerializer, ActionRecordsSerializer
 
 from rest_framework import viewsets
 from rest_framework import filters
@@ -82,12 +83,26 @@ class TimeSlotViewSet(viewsets.ModelViewSet):
     serializer_class = TimeSlotSerializer
 
 
+class OrderRecordsFilter(filters.FilterSet):
+
+    class Meta:
+        model = OrderRecords
+        fields = {
+            'student': ['exact'],
+            'date': ['exact'],
+            'timeSlot__startTime': ['lte'],
+            'timeSlot__endTime': ['gte']
+        }
+
+
 class OrderRecordsViewSet(viewsets.ModelViewSet):
 
     """
     """
     queryset = OrderRecords.objects.all()
     serializer_class = OrderRecordsSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = OrderRecordsFilter
 
 
 class LabDeskList(generics.ListCreateAPIView):
@@ -164,3 +179,22 @@ def labResourceList(request, labID):
             content["occupyNum"] = len(occResources)
             rs.append(content)
     return Response(rs, status.HTTP_200_OK)
+
+
+class ActionRecordsViewSet(generics.RetrieveUpdateAPIView):
+    serializer_class = ActionRecordsSerializer
+    queryset = ActionRecords.objects.all()
+    lookup_field = 'OrderRecordID__pk'
+
+    def get_object(self):
+        if self.request.method == 'PUT':
+            orderRec = OrderRecords.objects.get(
+                pk=self.kwargs['OrderRecordID__pk'])
+            obj, created = ActionRecords.objects.get_or_create(
+                OrderRecordID=orderRec)
+            return obj
+        else:
+            return super(ActionRecordsViewSet, self).get_object()
+
+# def update(self, request, *args, **kwargs):
+#     pass
